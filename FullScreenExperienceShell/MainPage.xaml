@@ -19,7 +19,7 @@
                         <ColumnDefinition Width="36"/>
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
-                    <ImageIcon Grid.Column="0" Source="{x:Bind Icon}" Width="24" Height="24"></ImageIcon>
+                    <ImageIcon Grid.Column="0" Source="{x:Bind Icon, Mode=OneWay}" Width="24" Height="24"></ImageIcon>
                     <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}" Style="{StaticResource BodyTextBlockStyle}" VerticalAlignment="Center" Padding="8"></TextBlock>
                 </Grid>
             </TreeViewItem>

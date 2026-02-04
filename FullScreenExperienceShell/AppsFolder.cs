@@ -163,21 +163,20 @@ namespace FullScreenExperienceShell
             try
             {
                 imageFactory = (IShellItemImageFactory)shellItem2;
-                imageFactory.GetImage(new SIZE(48, 48), SIIGBF.SIIGBF_BIGGERSIZEOK | SIIGBF.SIIGBF_ICONONLY | SIIGBF.SIIGBF_SCALEUP, out var bitmap);
+                imageFactory.GetImage(new SIZE(96, 96), SIIGBF.SIIGBF_BIGGERSIZEOK | SIIGBF.SIIGBF_ICONONLY | SIIGBF.SIIGBF_SCALEUP, out var bitmap);
                 
                 using (bitmap)
                 {
                     unsafe
                     {
-                        BITMAPINFO bmpInfo;
-                        bmpInfo.bmiHeader.biSize = (uint)Marshal.SizeOf<BITMAPINFOHEADER>();
-                        Span<byte> span = new Span<byte>(&bmpInfo, Marshal.SizeOf<BITMAPINFOHEADER>());
+                        BITMAP bmp;
+                        Span<byte> span = new Span<byte>(&bmp, Marshal.SizeOf<BITMAP>());
                         PInvoke.GetObject(bitmap, span);
 
-                        int size = bmpInfo.bmiHeader.biWidth * bmpInfo.bmiHeader.biHeight * 4;
+                        int size = bmp.bmWidthBytes * bmp.bmHeight;
                         var bytes = new byte[size];
                         PInvoke.GetBitmapBits(bitmap, bytes);
-                        return (bmpInfo.bmiHeader.biWidth, bmpInfo.bmiHeader.biHeight, bytes);
+                        return (bmp.bmWidth, bmp.bmHeight, bytes);
                     }
                 }
             }
