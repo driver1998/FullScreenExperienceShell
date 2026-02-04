@@ -4,6 +4,10 @@ SHCreateShellItemArray
 StrRetToBufW
 GetBitmapBits
 GetObject
+CreateEvent
+SetEvent
+CoWaitForMultipleObjects
+SetForegroundWindow
 
 IShellFolder
 IShellItem2
@@ -12,6 +16,7 @@ IShellItemImageFactory
 PKEY_ItemNameDisplay
 PKEY_ParsingName
 
+BITMAP
 BITMAPINFO
 KNOWN_FOLDER_FLAG
 FOLDERID_AppsFolder
