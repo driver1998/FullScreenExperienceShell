@@ -1,4 +1,5 @@
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -6,6 +7,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Windows.Input;
 
 namespace FullScreenExperienceShell
 {
@@ -13,7 +15,7 @@ namespace FullScreenExperienceShell
     public partial class MainPageViewModel : ObservableObject
     {
         [ObservableProperty]
-        public partial ObservableCollection<ObservableAppItem> Applications { get; set; } = [];
+        public partial ObservableCollection<AppItemViewModel> Applications { get; set; } = [];
 
         public List<AppItem> AppItems = [];
     }
@@ -27,6 +29,7 @@ namespace FullScreenExperienceShell
             InitializeComponent();
         }
 
+        [RelayCommand]
         public async Task RefreshAppList()
         {
             await Task.Run(() =>
@@ -35,22 +38,16 @@ namespace FullScreenExperienceShell
             });
 
             AppsFolder.InitApplicationList(ViewModel.AppItems, ViewModel.Applications);
-
-        }
-
-        private async void RefreshBtn_Click(object sender, RoutedEventArgs e)
-        {
-            await RefreshAppList();
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)
         {
-            await RefreshAppList();
+            await RefreshAppListCommand.ExecuteAsync(null);
         }
 
         private void TreeView_ItemInvoked(TreeView sender, TreeViewItemInvokedEventArgs args)
         {
-            var appItem = (ObservableAppItem)args.InvokedItem;
+            var appItem = (AppItemViewModel)args.InvokedItem;
             if (appItem.Type == AppItemType.Container)
             {
                 appItem.Expanded = !appItem.Expanded;
@@ -70,5 +67,6 @@ namespace FullScreenExperienceShell
                 Process.Start(processStartInfo);
             }
         }
+
     }
 }

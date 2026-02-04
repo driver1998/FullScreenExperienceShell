@@ -36,7 +36,7 @@ namespace FullScreenExperienceShell
         Application
     }
 
-    public partial class ObservableAppItem : ObservableObject
+    public partial class AppItemViewModel : ObservableObject
     {
         [ObservableProperty]
         public partial string Name { get; set; } = "";
@@ -51,10 +51,10 @@ namespace FullScreenExperienceShell
         [ObservableProperty]
         public partial bool Expanded { get; set; } = false;
         [ObservableProperty]
-        public partial ObservableCollection<ObservableAppItem> Children { get; set; } = [];
+        public partial ObservableCollection<AppItemViewModel> Children { get; set; } = [];
 
-        public ObservableAppItem() { }
-        public ObservableAppItem(AppItem item)
+        public AppItemViewModel() { }
+        public AppItemViewModel(AppItem item)
         {
             Name = item.Name;
             ParsingPath = item.ParsingPath;
@@ -88,7 +88,7 @@ namespace FullScreenExperienceShell
 
     internal class AppsFolder
     {
-        internal static ObservableAppItem? FindApplication(ObservableCollection<ObservableAppItem> appList, string parsingPath)
+        internal static AppItemViewModel? FindApplication(ObservableCollection<AppItemViewModel> appList, string parsingPath)
         {
             foreach (var item in appList)
             {
@@ -111,18 +111,18 @@ namespace FullScreenExperienceShell
             return null;
         }
 
-        internal static void AddApplication(ObservableCollection<ObservableAppItem> appList, AppItem item)
+        internal static void AddApplication(ObservableCollection<AppItemViewModel> appList, AppItem item)
         {
             if (string.IsNullOrEmpty(item.Suite))
             {
-                appList.Add(new ObservableAppItem(item));
+                appList.Add(new AppItemViewModel(item));
             }
             else
             {
                 var container = appList.Where(p => p.Type == AppItemType.Container && p.Name == item.Suite).FirstOrDefault();
                 if (container == null)
                 {
-                    container = new ObservableAppItem
+                    container = new AppItemViewModel
                     {
                         Name = item.Suite,
                         Suite = "Container",
@@ -130,12 +130,12 @@ namespace FullScreenExperienceShell
                     };
                     appList.Add(container);
                 }
-                container.Children.Add(new ObservableAppItem(item));
+                container.Children.Add(new AppItemViewModel(item));
             }
         }
-        internal static void AppListFlatten(ObservableCollection<ObservableAppItem> appList)
+        internal static void AppListFlatten(ObservableCollection<AppItemViewModel> appList)
         {
-            List<(int, ObservableAppItem)> itemToRemove = [];
+            List<(int, AppItemViewModel)> itemToRemove = [];
 
             foreach (var (i, item) in appList.Index())
             {
@@ -309,11 +309,11 @@ namespace FullScreenExperienceShell
             }
         }
 
-        internal static void InitApplicationList(List<AppItem> appList, ObservableCollection<ObservableAppItem> observableList)
+        internal static void InitApplicationList(List<AppItem> appList, ObservableCollection<AppItemViewModel> observableList)
         {
             foreach (var item in appList)
             {
-                ObservableAppItem? app = FindApplication(observableList, item.ParsingPath);
+                AppItemViewModel? app = FindApplication(observableList, item.ParsingPath);
                 if (app != null)
                 {
                     app.Name = item.Name;

@@ -12,7 +12,7 @@
     <Page.Resources>
         <local:BooleanValueConverter x:Name="ContainerIconValueConverter" TrueValue="📂" FalseValue="📁"/>
 
-        <DataTemplate x:Name="ApplicationTemplate" x:DataType="local:ObservableAppItem">
+        <DataTemplate x:Name="ApplicationTemplate" x:DataType="local:AppItemViewModel">
             <TreeViewItem>
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -24,7 +24,7 @@
                 </Grid>
             </TreeViewItem>
         </DataTemplate>
-        <DataTemplate x:Name="ContainerTemplate" x:DataType="local:ObservableAppItem">
+        <DataTemplate x:Name="ContainerTemplate" x:DataType="local:AppItemViewModel">
             <TreeViewItem ItemsSource="{x:Bind Children}" ExpandedGlyph="" CollapsedGlyph="" IsExpanded="{x:Bind Expanded, Mode=OneWay}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -51,9 +51,10 @@
             <ColumnDefinition Width="7*"/>
         </Grid.ColumnDefinitions>
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <Button x:Name="RefreshBtn" Click="RefreshBtn_Click">Refresh</Button>
+            <Button x:Name="RefreshBtn" Command="{x:Bind RefreshAppListCommand}">Refresh</Button>
         </StackPanel>
-        <TreeView Grid.Row="1" CanReorderItems="False" SelectionMode="None" ItemsSource="{x:Bind ViewModel.Applications}" ItemTemplateSelector="{StaticResource AppItemTemplateSelector}" ItemInvoked="TreeView_ItemInvoked"/>
-
+        <TreeView Grid.Row="1" CanReorderItems="False" SelectionMode="None" ItemsSource="{x:Bind ViewModel.Applications}"
+                  ItemTemplateSelector="{StaticResource AppItemTemplateSelector}" ItemInvoked="TreeView_ItemInvoked"/>
+        <ProgressRing Grid.Row="1" Visibility="{x:Bind RefreshAppListCommand.IsRunning, Mode=OneWay}" Width="48" Height="48"></ProgressRing>
     </Grid>
 </Page>

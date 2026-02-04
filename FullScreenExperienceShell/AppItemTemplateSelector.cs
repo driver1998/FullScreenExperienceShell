@@ -12,7 +12,7 @@ namespace FullScreenExperienceShell
         public DataTemplate? ApplicationTemplate { get; set; }
         protected override DataTemplate? SelectTemplateCore(object item)
         {
-            var explorerItem = (ObservableAppItem)item;
+            var explorerItem = (AppItemViewModel)item;
             if (explorerItem.Type == AppItemType.Container) return ContainerTemplate;
 
             return ApplicationTemplate;

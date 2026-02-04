@@ -1,12 +1,9 @@
-﻿SHGetKnownFolderItem
-SHGetKnownFolderIDList
+﻿SHGetKnownFolderIDList
 SHGetDesktopFolder
-SHCreateItemFromIDList
-SHCreateItemFromParsingName
+SHCreateShellItemArray
 StrRetToBufW
 GetBitmapBits
 GetObject
-SHCreateShellItemArray 
 
 IShellFolder
 IShellItem2
@@ -16,5 +13,6 @@ PKEY_ItemNameDisplay
 PKEY_ParsingName
 
 BITMAPINFO
+KNOWN_FOLDER_FLAG
 FOLDERID_AppsFolder
 S_OK
