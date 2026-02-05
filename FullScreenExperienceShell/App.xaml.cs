@@ -1,4 +1,14 @@
-﻿using Microsoft.UI.Dispatching;
+using DevHome.Common.Contracts;
+using DevHome.Common.Extensions;
+using DevHome.Common.Services;
+using DevHome.Contracts.Services;
+using DevHome.Dashboard.Extensions;
+using DevHome.Services;
+using DevHome.Services.Core.Contracts;
+using DevHome.Services.Core.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
@@ -7,18 +17,21 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Navigation;
 using Microsoft.UI.Xaml.Shapes;
-using Microsoft.Win32.SafeHandles;
-using Microsoft.Windows.AppLifecycle;
+using Serilog;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using Windows.ApplicationModel;
+using Windows.ApplicationModel.Activation;
+using Microsoft.Win32.SafeHandles;
+using Microsoft.Windows.AppLifecycle;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Accessibility;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 
@@ -30,9 +43,19 @@ namespace FullScreenExperienceShell
     /// <summary>
     /// Provides application-specific behavior to supplement the default Application class.
     /// </summary>
-    public partial class App : Application
+    public partial class App : Application, IApp
     {
         private Window? _window;
+
+        public IHost Host
+        {
+            get;
+        }
+
+        public T GetService<T>() where T : class
+        {
+            return Host.GetService<T>();
+        }
         private static SafeFileHandle? redirectEventHandle = null;
 
         /// <summary>
@@ -42,7 +65,45 @@ namespace FullScreenExperienceShell
         public App()
         {
             InitializeComponent();
+
+            Host = Microsoft.Extensions.Hosting.Host.
+                CreateDefaultBuilder().
+                UseContentRoot(AppContext.BaseDirectory).
+                UseDefaultServiceProvider((context, options) =>
+                {
+                    options.ValidateOnBuild = true;
+                }).
+                ConfigureServices((context, services) =>
+                {
+                    // Add Serilog logging for ILogger.
+                    services.AddLogging(lb => lb.AddSerilog(dispose: true));
+
+                    // Services
+                    services.AddSingleton<ILocalSettingsService, LocalSettingsService>();
+                    services.AddSingleton<IThemeSelectorService, ThemeSelectorService>();
+                    services.AddSingleton<IPackageDeploymentService, PackageDeploymentService>();
+                    services.AddSingleton<IMicrosoftStoreService, MicrosoftStoreService>();
+
+                    services.AddSingleton<IStringResource, StringResource>();
+                    services.AddTransient<AdaptiveCardRenderingService>();
+
+                    // Core Services
+                    services.AddSingleton<IFileService, FileService>();
+
+                    //// Main window: Allow access to the main window
+                    //// from anywhere in the application.
+                    //services.AddSingleton(_ => MainWindow);
+
+                    //// DispatcherQueue: Allow access to the DispatcherQueue for
+                    //// the main window for general purpose UI thread access.
+                    services.AddSingleton(_ => DispatcherQueue.GetForCurrentThread());
+
+                    // Dashboard
+                    services.AddDashboard(context);
+                }).
+                Build();
         }
+
 
         /// <summary>
         /// Invoked when the application is launched.

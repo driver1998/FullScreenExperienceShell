@@ -55,5 +55,7 @@
 	<Capabilities>
 		<rescap:Capability Name="runFullTrust" />
 		<uap4:CustomCapability Name="Microsoft.appCategory.gamingHome_8wekyb3d8bbwe" />
+	    <rescap:Capability Name="packageManagement" />
+	    <rescap:Capability Name="packageQuery" />
 	</Capabilities>
 </Package>

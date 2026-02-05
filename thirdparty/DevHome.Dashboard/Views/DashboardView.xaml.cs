@@ -47,8 +47,7 @@ public partial class DashboardView : ToolPage, IDisposable
     private readonly SemaphoreSlim _moveWidgetsLock = new(1, 1);
 
     private static DispatcherQueue _dispatcherQueue;
-    private readonly ILocalSettingsService _localSettingsService;
-    private readonly IWidgetExtensionService _widgetExtensionService;
+    private readonly ILocalSettingsService _localSettingsService;    
     private readonly CancellationTokenSource _initWidgetsCancellationTokenSource = new();
     private bool _disposedValue;
 
@@ -67,7 +66,6 @@ public partial class DashboardView : ToolPage, IDisposable
 
         _dispatcherQueue = Application.Current.GetService<DispatcherQueue>();
         _localSettingsService = Application.Current.GetService<ILocalSettingsService>();
-        _widgetExtensionService = Application.Current.GetService<IWidgetExtensionService>();
 
 #if DEBUG
         Loaded += AddResetButton;
@@ -657,14 +655,6 @@ public partial class DashboardView : ToolPage, IDisposable
                     _log.Error($"Error inserting widget in pinned widgets, id = {widgetId}, index = {index}");
                     await widget.DeleteAsync();
                     return;
-                }
-
-                // The WidgetService will start the widget provider, however Dev Home won't know about it and won't be
-                // able to send disposed events when Dev Home closes. Ensure the provider is started here so we can
-                // tell the extension to dispose later.
-                if (_widgetExtensionService.IsCoreWidgetProvider(comSafeWidgetDefinition.ProviderDefinitionId))
-                {
-                    await _widgetExtensionService.EnsureCoreWidgetExtensionStarted(comSafeWidgetDefinition.ProviderDefinitionId);
                 }
 
                 var wvm = _widgetViewModelFactory(widget, size, comSafeWidgetDefinition);

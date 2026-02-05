@@ -12,7 +12,6 @@
   <ItemGroup>
     <None Remove="Assets\HostConfigDark.json" />
     <None Remove="Assets\HostConfigLight.json" />
-    <None Remove="Styles\Dashboard_ThemeResources.xaml" />
     <None Remove="Views\AddWidgetDialog.xaml" />
     <None Remove="Views\DashboardView.xaml" />
     <None Remove="Views\WidgetControl.xaml" />
@@ -27,9 +26,9 @@
 
   <ItemGroup>
     <ProjectReference Include="..\DevHome.Common\DevHome.Common.csproj" />
+	<ProjectReference Include="..\DevHome.Services.Core\DevHome.Services.Core.csproj" />
     <Content Include=".\BuildAssets\Microsoft.Windows.Widgets.Internal.winmd" Link="Microsoft.Windows.Widgets.Internal.winmd" CopyToOutputDirectory="PreserveNewest" />
     <Content Include=".\BuildAssets\Microsoft.Windows.Widgets.winmd" Link="Microsoft.Windows.Widgets.winmd" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="Styles\Dashboard_ThemeResources.xaml" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

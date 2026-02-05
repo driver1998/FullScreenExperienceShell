@@ -77,7 +77,7 @@ public sealed partial class AddWidgetDialog : ContentDialog
         AddWidgetNavigationView.MenuItems.Clear();
 
         // Show the providers and widgets underneath them in alphabetical order.
-        var providerDefinitions = (await _hostingService.GetProviderDefinitionsAsync()).OrderBy(x => x.DisplayName);
+        var providerDefinitions = (await _hostingService.GetProviderDefinitionsAsync());
         var comSafeWidgetDefinitions = await ComSafeHelpers.GetAllOrderedComSafeWidgetDefinitions(_hostingService);
 
         _log.Information($"Filling available widget list, found {providerDefinitions.Count()} providers and {comSafeWidgetDefinitions.Count} widgets");

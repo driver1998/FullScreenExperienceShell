@@ -16,4 +16,8 @@
     <Platform Solution="*|ARM64" Project="arm64" />
     <Platform Solution="*|x64" Project="x64" />
   </Project>
+  <Project Path="thirdparty/DevHome.Services.Core/DevHome.Services.Core.csproj">
+    <Platform Solution="*|ARM64" Project="arm64" />
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
 </Solution>
