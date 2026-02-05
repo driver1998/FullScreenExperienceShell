@@ -1,0 +1,46 @@
+<UserControl
+    x:Class="DevHome.Common.Views.Banner"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:commonviews="using:DevHome.Common.Views"
+    AutomationProperties.Name="{x:Bind Title}"
+    mc:Ignorable="d">
+    <Grid x:Name="BannerGrid" Height="214">
+        <Grid.Background>
+            <ImageBrush Stretch="Fill" ImageSource="{x:Bind BackgroundSource, Mode=OneWay}" />
+        </Grid.Background>
+
+        <!-- Background image -->
+        <!-- Set MinWidth so that image gets clipped as window narrows, rather than scaling down -->
+        <Image Height="{Binding ElementName=BannerGrid, Path=Height}"
+               Stretch="Uniform" Source="{x:Bind OverlaySource, Mode=OneWay}"
+               AutomationProperties.AccessibilityView="Raw"
+               MinWidth="{ThemeResource MaxPageContentWidth}"
+               FlowDirection="{x:Bind FlowDirection}" />
+
+        <!-- Content -->
+        <StackPanel x:Name="PanelTextContent" VerticalAlignment="Center" Margin="38 0 0 0" Spacing="12" SizeChanged="PanelTextContent_SizeChanged">
+            <TextBlock MaxWidth="{x:Bind TextWidth}"
+                       HorizontalAlignment="Left"
+                       Style="{ThemeResource SubtitleTextBlockStyle}"
+                       Text="{x:Bind Title}"/>
+            <TextBlock MaxWidth="{x:Bind TextWidth}"
+                       HorizontalAlignment="Left"
+                       TextWrapping="Wrap"
+                       Text="{x:Bind Description}"/>
+            <Button Margin="0 15 0 0"
+                    Padding="25 4 25 6"
+                    MinWidth="120"
+                    Command="{x:Bind ButtonCommand}"
+                    Content="{x:Bind ButtonText}"/>
+        </StackPanel>
+
+        <!-- Hide Banner Button -->
+        <commonviews:CloseButton Margin="5"
+                                 x:Uid="BannerHideButton"
+                                 Command="{x:Bind HideButtonCommand}"
+                                 Visibility="{x:Bind HideButtonVisibility}" />
+    </Grid>
+</UserControl>

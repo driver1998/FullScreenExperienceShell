@@ -1,0 +1,276 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AddWidget.Content" xml:space="preserve">
+    <value>Add widget</value>
+    <comment>Label for "Add widget" button</comment>
+  </data>
+  <data name="DashboardBanner.Title" xml:space="preserve">
+    <value>Monitor your projects using widgets</value>
+    <comment>Title text of an instruction banner on the widget dashboard</comment>
+  </data>
+  <data name="DashboardBanner.Description" xml:space="preserve">
+    <value>Check out widgets that can help you connect to your developer account and manage your projects.</value>
+    <comment>Description text of an instruction banner on the widget dashboard</comment>
+  </data>
+  <data name="DashboardBanner.ButtonText" xml:space="preserve">
+    <value>Learn more</value>
+    <comment>Button text for learning more about setting up the widget dashboard</comment>
+  </data>
+  <data name="NavigationPane.Content" xml:space="preserve">
+    <value>Dashboard</value>
+    <comment>Navigation pane content</comment>
+  </data>
+  <data name="AddWidgetsTitle.Text" xml:space="preserve">
+    <value>Add widgets</value>
+    <comment>Title for "Add widgets" dialog</comment>
+  </data>
+  <data name="PinButtonText.Text" xml:space="preserve">
+    <value>Pin</value>
+    <comment>Label for button that pins the widget</comment>
+  </data>
+  <data name="PinButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pin</value>
+    <comment>Name of the button that pins the widget</comment>
+  </data>
+  <data name="UpdateWidgetButton.Content" xml:space="preserve">
+    <value>Update</value>
+    <comment>Label for button that updates the widget</comment>
+  </data>
+  <data name="RemoveWidgetMenuText" xml:space="preserve">
+    <value>Remove widget</value>
+    <comment>Menu item that will remove the Widget from being displayed on the dashboard if it is selected</comment>
+  </data>
+  <data name="WidgetMoreOptionsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>More options</value>
+    <comment>Name of the button that brings up the "More options" menu</comment>
+  </data>
+  <data name="WidgetMoreOptionsButton.ToolTipService.ToolTip" xml:space="preserve">
+    <value>More options</value>
+    <comment>Name of the button that brings up the "More options" menu</comment>
+  </data>
+  <data name="LargeWidgetMenuText" xml:space="preserve">
+    <value>Large</value>
+    <comment>The size of a large widget</comment>
+  </data>
+  <data name="MediumWidgetMenuText" xml:space="preserve">
+    <value>Medium</value>
+    <comment>The size of a medium widget</comment>
+  </data>
+  <data name="SmallWidgetMenuText" xml:space="preserve">
+    <value>Small</value>
+    <comment>The size of a small widget</comment>
+  </data>
+  <data name="CustomizeWidgetMenuText" xml:space="preserve">
+    <value>Customize</value>
+    <comment>A menu option that will bring up a dialog that lets the user customize the widget</comment>
+  </data>
+  <data name="DashboardPage_Title.Text" xml:space="preserve">
+    <value>Dashboard</value>
+    <comment>Header label for the Dashboard page</comment>
+  </data>
+  <data name="NoWidgetsAdded.Text" xml:space="preserve">
+    <value>No widgets added yet</value>
+    <comment>Message shown when no widgets have been added to the Dashboard</comment>
+  </data>
+  <data name="AddFirstWidgetLink.Content" xml:space="preserve">
+    <value>Add new widget</value>
+    <comment>The hyperlink to bring the user to the Add Widget dialog. Shows if the user hasn't added any widgets.</comment>
+  </data>
+  <data name="RunningAsAdminMessage.Text" xml:space="preserve">
+    <value>Dashboard cannot be displayed while running as Administrator.</value>
+    <comment>Message shown when the user ran as admin and we can't show the dashboard.</comment>
+  </data>
+  <data name="RestartDevHomeMessage.Text" xml:space="preserve">
+    <value>We're having trouble displaying widgets. Restarting Dev Home may help.</value>
+    <comment>Message shown when there's no widget service and the user should restart Dev Home.</comment>
+  </data>
+  <data name="UpdatingWidgetServiceMessage.Text" xml:space="preserve">
+    <value>The Widget Service is updating. Please try again when the update is complete.</value>
+    <comment>Message shown when the widget service package is updating and the user should try again later.</comment>
+  </data>
+  <data name="NotOKWidgetServiceMessage.Text" xml:space="preserve">
+    <value>The installed Widget Service package is not available for use.</value>
+    <comment>Message shown when the widget service package has a problem and cannot be used.</comment>
+  </data>
+  <data name="UpdateWidgetsMessage.Text" xml:space="preserve">
+    <value>You do not have the required dependency installed to display widgets. Please install or update the package from the Store and then restart Dev Home.</value>
+    <comment>Message shown when no widgets have been added to the Dashboard</comment>
+  </data>
+  <data name="UpdateWidgetsMessageLink.Content" xml:space="preserve">
+    <value>Get in Store app</value>
+    <comment>Button text to go to store listing</comment>
+  </data>
+  <data name="WidgetErrorCardDisplayText" xml:space="preserve">
+    <value>This widget could not be displayed</value>
+    <comment>Message shown in the widget if the widget was given bad data and can't be rendered.</comment>
+  </data>
+  <data name="WidgetErrorCardCreate1Text" xml:space="preserve">
+    <value>This widget cannot be created</value>
+    <comment>Message shown when the user tries to create a widget but the widget provider is not installed.</comment>
+  </data>
+  <data name="WidgetErrorCardCreate2Text" xml:space="preserve">
+    <value>Please ensure the app that provides this widget is installed.</value>
+    <comment>Second part of message shown when the user tries to create a widget but the widget provider is not installed.</comment>
+  </data>
+  <data name="WidgetErrorCardNoWidgetsText" xml:space="preserve">
+    <value>There are no widgets available to add</value>
+    <comment>Message shown when the user tries to create a widget but there are no installed widgets.</comment>
+  </data>
+  <data name="UpdateWebExpContent" xml:space="preserve">
+    <value>Please ensure you have the latest version of the Windows Web Experience Pack installed.</value>
+    <comment>Message asking the user to update an app from the store.</comment>
+  </data>
+  <data name="UpdateWebExpCancel" xml:space="preserve">
+    <value>Cancel</value>
+    <comment>Button text to dismiss dialog</comment>
+  </data>
+  <data name="UpdateWebExpUpdate" xml:space="preserve">
+    <value>Get in Store app</value>
+    <comment>Button text to go to store listing</comment>
+  </data>
+  <data name="DashboardBanner.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Dashboard Banner</value>
+    <comment>Name of the dashboard banner for automation</comment>
+  </data>
+  <data name="CustomizeWidgetTitle.Text" xml:space="preserve">
+    <value>Customize widget</value>
+    <comment>Title for "Customize" dialog</comment>
+  </data>
+  <data name="WidgetSizeSelected" xml:space="preserve">
+    <value>Selected</value>
+    <comment>State of selected size for automation purposes</comment>
+  </data>
+  <data name="CouldNotCreateWidgetError" xml:space="preserve">
+    <value>Dev Home encountered an error. The widget could not be created.</value>
+    <comment>Error that pops up in a message dialog when the user tries to pin a widget but the widget could not be created.</comment>
+  </data>
+  <data name="CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+    <comment>Text for a button to close a content dialog.</comment>
+  </data>
+  <data name="DashboardPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Dashboard</value>
+    <comment>Dashboard accessible name to be narrated</comment>
+  </data>
+  <data name="WidgetRemoved" xml:space="preserve">
+    <value>Widget removed</value>
+    <comment>This is said by narrator whenever a widget is removed</comment>
+  </data>
+</root>
