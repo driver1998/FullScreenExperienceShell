@@ -113,32 +113,6 @@ namespace FullScreenExperienceShell
             await RefreshAppListCommand.ExecuteAsync(null);
         }
 
-        private void AppListItem_Clicked(object sender, RoutedEventArgs args)
-        {
-            var appItem = (sender as FrameworkElement)?.DataContext as AppItemViewModel;
-            if (appItem != null)
-            {
-                if (appItem.Type == AppItemType.Container)
-                {
-                    appItem.Expanded = !appItem.Expanded;
-                }
-                else
-                {
-                    if (string.IsNullOrEmpty(appItem.ParsingPath))
-                    {
-                        return;
-                    }
-
-                    var processStartInfo = new ProcessStartInfo
-                    {
-                        FileName = $@"shell:appsfolder\{appItem.ParsingPath}",
-                        UseShellExecute = true
-                    };
-                    Process.Start(processStartInfo);
-                }
-            }
-        }
-
         private void ListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             var appItem = e.ClickedItem as AppItemViewModel;

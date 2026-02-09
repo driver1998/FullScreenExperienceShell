@@ -422,7 +422,8 @@ namespace FullScreenExperienceShell
                     }
                     finally
                     {
-                        Marshal.FinalReleaseComObject(appShellItem);                        
+                        Marshal.FinalReleaseComObject(appShellItem);
+                        Marshal.FinalReleaseComObject(extractIcon);
                     }
                     
                 });
