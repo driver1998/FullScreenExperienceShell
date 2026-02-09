@@ -8,16 +8,26 @@ CreateEvent
 SetEvent
 CoWaitForMultipleObjects
 SetForegroundWindow
+SHLoadIndirectString
+GetIconInfo
+CreateCompatibleDC
+DeleteDC
+SelectObject
+CreateDIBSection
+DrawIconEx
+DestroyIcon
 
 IShellFolder
 IShellItem2
 IShellItemImageFactory
+IExtractIconW
 
 PKEY_ItemNameDisplay
 PKEY_ParsingName
+FOLDERID_AppsFolder
 
+S_OK
 BITMAP
 BITMAPINFO
 KNOWN_FOLDER_FLAG
-FOLDERID_AppsFolder
-S_OK
+BI_COMPRESSION

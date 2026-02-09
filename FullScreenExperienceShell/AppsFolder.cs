@@ -1,22 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml.Media.Imaging;
 using System;
-using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
 using Windows.Win32.System.Com.StructuredStorage;
 using Windows.Win32.UI.Shell;
 using Windows.Win32.UI.Shell.Common;
+using Windows.Win32.UI.WindowsAndMessaging;
 
 namespace Windows.Win32
 {
@@ -26,6 +23,30 @@ namespace Windows.Win32
         {
             fmtid = Guid.Parse("86d40b4d-9069-443c-819a-2a54090dccec"),
             pid = 16U
+        };
+
+        internal static readonly PROPERTYKEY PKEY_AppUserModel_PackageFamilyName = new PROPERTYKEY
+        {
+            fmtid = Guid.Parse("9f4c2855-9f79-4b39-a8d0-e1d42de1d5f3"),
+            pid = 17U
+        };
+
+        internal static readonly PROPERTYKEY PKEY_AppUserModel_PackageFullName = new PROPERTYKEY
+        {
+            fmtid = Guid.Parse("9f4c2855-9f79-4b39-a8d0-e1d42de1d5f3"),
+            pid = 21U
+        };
+
+        internal static readonly PROPERTYKEY PKEY_AppUserModel_PackageInstallPath = new PROPERTYKEY
+        {
+            fmtid = Guid.Parse("9f4c2855-9f79-4b39-a8d0-e1d42de1d5f3"),
+            pid = 15U
+        };
+
+        internal static readonly PROPERTYKEY PKEY_Tile_SmallLogoPath = new PROPERTYKEY
+        {
+            fmtid = Guid.Parse("{86d40b4d-9069-443c-819a-2a54090dccec}"),
+            pid = 2U
         };
     }
 }
@@ -49,7 +70,7 @@ namespace FullScreenExperienceShell
         [ObservableProperty]
         public partial AppItemType Type { get; set; }
         [ObservableProperty]
-        public partial WriteableBitmap? Icon { get; set; } = null;
+        public partial BitmapSource? Icon { get; set; } = null;        
         [ObservableProperty]
         public partial bool Expanded { get; set; } = false;
         [ObservableProperty]
@@ -62,18 +83,31 @@ namespace FullScreenExperienceShell
             ParsingPath = item.ParsingPath;
             Suite = item.Suite;
             Type = item.Type;
-            SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
+
+            if (!string.IsNullOrEmpty(item.IconLocation))
+            {
+                SetIcon(item.IconLocation);
+            }
+            else
+            {
+                SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
+            }
         }
 
+        public void SetIcon(string url)
+        {
+            Icon = new BitmapImage(new Uri(url));
+        }
         public void SetIcon(int width, int height, byte[]? bytes)
         {
-            if (bytes == null)
+            if (width == 0 || height == 0 || bytes == null)
             {
                 return;
             }
-            Icon = new WriteableBitmap(width, height);
-            using var stream = Icon.PixelBuffer.AsStream();
+            var bmp = new WriteableBitmap(width, height);
+            using var stream = bmp.PixelBuffer.AsStream();
             stream.Write(bytes);
+            Icon = bmp;
         }
     }
 
@@ -86,9 +120,10 @@ namespace FullScreenExperienceShell
         public int IconWidth { get; set; }
         public int IconHeight { get; set; }
         public byte[]? IconBytes { get; set; }
+        public string IconLocation { get; set; } = "";
     }
 
-    internal class AppsFolder
+    internal partial class AppsFolder
     {
         internal static AppItemViewModel? FindApplication(ObservableCollection<AppItemViewModel> appList, string parsingPath)
         {
@@ -177,32 +212,99 @@ namespace FullScreenExperienceShell
         }
 
 
-        internal static (int width, int height, byte[] bytes) GetImage(IShellItem2 shellItem2)
+        internal static void GetImage(AppItem appItem, IShellItem2 shellItem2, IExtractIconW extractIcon)
         {
-            IShellItemImageFactory? imageFactory = null;
-            try
+            var packageFamilyName = ShellItemGetStringProperty(shellItem2, PInvoke.PKEY_AppUserModel_PackageFamilyName);
+            var packaged = !string.IsNullOrEmpty(packageFamilyName);
+            Span<char> charBuf = stackalloc char[65536];
+
+            if (packaged)
             {
-                imageFactory = (IShellItemImageFactory)shellItem2;
-                imageFactory.GetImage(new SIZE(96, 96), SIIGBF.SIIGBF_BIGGERSIZEOK | SIIGBF.SIIGBF_ICONONLY | SIIGBF.SIIGBF_SCALEUP, out var bitmap);
-                
-                using (bitmap)
+                var packageFullName = ShellItemGetStringProperty(shellItem2, PInvoke.PKEY_AppUserModel_PackageFullName);
+                var packageInstallPath = ShellItemGetStringProperty(shellItem2, PInvoke.PKEY_AppUserModel_PackageInstallPath);
+                var smallLogoPath = ShellItemGetStringProperty(shellItem2, PInvoke.PKEY_Tile_SmallLogoPath);                
+
+                var staticLogoPath = Path.Combine(packageInstallPath, smallLogoPath);
+
+                var indirectString = $"@{{{packageFullName}?ms-resource:///Files/{smallLogoPath}}}";
+                PInvoke.SHLoadIndirectString(indirectString, charBuf);
+                var logoPath = new string(charBuf.SliceAtNull());
+
+                if (string.IsNullOrEmpty(logoPath) && Path.Exists(staticLogoPath))
                 {
+                    logoPath = staticLogoPath;
+                }
+                appItem.IconLocation = logoPath;
+            }
+            else
+            {
+
+                var iconPath = string.Empty;
+                int iconIndex = 0;
+                try
+                {
+                    //Debug.WriteLine(appItem.Name);                    
                     unsafe
                     {
-                        BITMAP bmp;
-                        Span<byte> span = new Span<byte>(&bmp, Marshal.SizeOf<BITMAP>());
-                        PInvoke.GetObject(bitmap, span);
+                        extractIcon.GetIconLocation(0, charBuf, out iconIndex, out var flags);
+                        iconPath = new string(charBuf.SliceAtNull());
 
-                        int size = bmp.bmWidthBytes * bmp.bmHeight;
-                        var bytes = new byte[size];
-                        PInvoke.GetBitmapBits(bitmap, bytes);
-                        return (bmp.bmWidth, bmp.bmHeight, bytes);
+                        if (string.IsNullOrEmpty(iconPath))
+                        {
+                            return;
+                        }
+
+                        fixed (char* str = charBuf)
+                        {
+                            HICON largeIcon = HICON.Null;
+                            ICONINFO iconInfo = new();                            
+                            var hdc = PInvoke.CreateCompatibleDC(HDC.Null);                            
+                            try
+                            {
+                                int width = 32;
+                                int height = 32;
+                                int bytesPerLine = width * 4;
+                                int imageSizeBytes = bytesPerLine * height;
+
+                                extractIcon.Extract(new PCWSTR(str), (uint)iconIndex, &largeIcon, null, (uint)width);
+                                PInvoke.GetIconInfo(largeIcon, &iconInfo);
+
+                                BITMAPINFO bmi;
+                                bmi.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
+                                bmi.bmiHeader.biWidth = width;
+                                bmi.bmiHeader.biHeight = -height;
+                                bmi.bmiHeader.biPlanes = 1;
+                                bmi.bmiHeader.biBitCount = 32;
+                                bmi.bmiHeader.biCompression = (uint)BI_COMPRESSION.BI_RGB;
+                                var hBitmap = PInvoke.CreateDIBSection(hdc, &bmi, (uint)DIB_USAGE.DIB_RGB_COLORS, out var bits, null, 0);
+                                if (!hBitmap.IsInvalid)
+                                {
+                                    var oldObj = PInvoke.SelectObject(hdc, hBitmap);
+                                    PInvoke.DrawIconEx(hdc, 0, 0, largeIcon, width, height, 0, HBRUSH.Null, DI_FLAGS.DI_NORMAL);
+                                    PInvoke.SelectObject(hdc, oldObj);
+                                }
+
+                                var srcSpan = new Span<byte>(bits, imageSizeBytes);
+                                var bytes = new byte[imageSizeBytes];
+                                srcSpan.CopyTo(bytes);
+
+                                appItem.IconWidth = 32;
+                                appItem.IconHeight = 32;
+                                appItem.IconBytes = bytes;
+                            }
+                            finally
+                            {
+                                if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
+                                if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
+                                if (!largeIcon.IsNull) PInvoke.DestroyIcon(largeIcon);
+                                PInvoke.DeleteDC(hdc);
+                            }
+                        }
                     }
+
+
                 }
-            }
-            finally
-            {
-                if (imageFactory != null) Marshal.ReleaseComObject(imageFactory);
+                catch { }
             }
         }
 
@@ -235,12 +337,14 @@ namespace FullScreenExperienceShell
             return Marshal.PtrToStringUni((nint)pv.Anonymous.Anonymous.Anonymous.pwszVal.Value) ?? "";
         }
 
-        internal static unsafe void ShellFolderEnumItems(IShellFolder shellFolder, Action<IShellItem2> action)
+        internal static unsafe void ShellFolderEnumItems(IShellFolder shellFolder, Action<IShellItem2, IExtractIconW> action)
         {
             IEnumIDList? enumIDList = null;
             Span<nint> itemIDPtrList = stackalloc nint[256];
+            Span<char> iconPath = stackalloc char[65535];
             uint cnt = (uint)itemIDPtrList.Length;
 
+            var IID_IExtractIconW = typeof(IExtractIconW).GUID;
             try
             {                
                 fixed(nint* itemIDList = itemIDPtrList)
@@ -256,9 +360,12 @@ namespace FullScreenExperienceShell
                             PInvoke.SHCreateShellItemArray(null, shellFolder, fetched, (ITEMIDLIST**)itemIDList, out IShellItemArray itemArray);
                             for (uint i = 0; i < fetched; i++)
                             {
+
                                 itemArray.GetItemAt(i, out IShellItem ppsi);
-                                action?.Invoke((IShellItem2)ppsi);
+                                shellFolder.GetUIObjectOf(HWND.Null, 1, (ITEMIDLIST**)&itemIDList[i], &IID_IExtractIconW, null, out var ppv);
+                                action?.Invoke((IShellItem2)ppsi, (IExtractIconW)ppv);
                             }
+                            
                         }
                         finally
                         {
@@ -266,6 +373,7 @@ namespace FullScreenExperienceShell
                             {
                                 Marshal.FreeCoTaskMem(itemIDPtrList[i]);
                             }
+                            
                         }
 
                         enumIDList.Next(cnt, (ITEMIDLIST**)itemIDList, &fetched);
@@ -284,7 +392,7 @@ namespace FullScreenExperienceShell
             try
             {
                 appsFolder = GetAppsFolder();
-                ShellFolderEnumItems(appsFolder, async (appShellItem) =>
+                ShellFolderEnumItems(appsFolder, async (appShellItem, extractIcon) =>
                 {
                     try
                     {
@@ -297,27 +405,24 @@ namespace FullScreenExperienceShell
                         {
                             item.Name = name ?? parsingPath;
                             item.Suite = suite ?? "";
+                            GetImage(item, appShellItem, extractIcon);
                         }
                         else
                         {
-                            var (width, height, bytes) = GetImage(appShellItem);
-
                             item = new AppItem
                             {
                                 Name = name ?? parsingPath,
                                 Suite = suite ?? "",
                                 ParsingPath = parsingPath,
                                 Type = AppItemType.Application,
-                                IconWidth = width,
-                                IconHeight = height,
-                                IconBytes = bytes
                             };
+                            GetImage(item, appShellItem, extractIcon);
                             appList.Add(item);
                         }
                     }
                     finally
                     {
-                        Marshal.FinalReleaseComObject(appShellItem);
+                        Marshal.FinalReleaseComObject(appShellItem);                        
                     }
                     
                 });
@@ -337,7 +442,14 @@ namespace FullScreenExperienceShell
                 {
                     app.Name = item.Name;
                     app.Suite = item.Suite;
-                    app.SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
+                    if (!string.IsNullOrEmpty(item.IconLocation))
+                    {
+                        app.SetIcon(item.IconLocation);
+                    }
+                    else
+                    {
+                        app.SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
+                    }
                 }
                 else
                 {
