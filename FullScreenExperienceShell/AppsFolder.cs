@@ -3,10 +3,13 @@ using Microsoft.UI.Xaml.Media.Imaging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
+using System.Xml.Linq;
 using Windows.Win32;
 using Windows.Win32.Foundation;
 using Windows.Win32.Graphics.Gdi;
@@ -70,9 +73,11 @@ namespace FullScreenExperienceShell
         [ObservableProperty]
         public partial AppItemType Type { get; set; }
         [ObservableProperty]
-        public partial BitmapSource? Icon { get; set; } = null;        
+        public partial BitmapSource? Icon { get; set; } = null;
         [ObservableProperty]
         public partial bool Expanded { get; set; } = false;
+        public string SortKey { get; set; } = "";
+
         [ObservableProperty]
         public partial ObservableCollection<AppItemViewModel> Children { get; set; } = [];
 
@@ -83,31 +88,27 @@ namespace FullScreenExperienceShell
             ParsingPath = item.ParsingPath;
             Suite = item.Suite;
             Type = item.Type;
-
-            if (!string.IsNullOrEmpty(item.IconLocation))
-            {
-                SetIcon(item.IconLocation);
-            }
-            else
-            {
-                SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
-            }
+            SortKey = (Suite ?? "") + "\\" + Name;
         }
 
-        public void SetIcon(string url)
+        public async Task SetIconAsync(string? iconPath, SafeHandle? iconHandle)
         {
-            Icon = new BitmapImage(new Uri(url));
-        }
-        public void SetIcon(int width, int height, byte[]? bytes)
-        {
-            if (width == 0 || height == 0 || bytes == null)
+            if (!string.IsNullOrEmpty(iconPath))
             {
-                return;
+                Icon = new BitmapImage(new Uri(iconPath));
             }
-            var bmp = new WriteableBitmap(width, height);
-            using var stream = bmp.PixelBuffer.AsStream();
-            stream.Write(bytes);
-            Icon = bmp;
+            else if (iconHandle?.IsClosed == false && iconHandle?.IsInvalid == false)
+            {
+                var (width, height, bytes) = await AppsFolder.GetIconBytes(iconHandle);
+                if (width == 0 || height == 0 || bytes == null)
+                {
+                    return;
+                }
+                var bmp = new WriteableBitmap(width, height);
+                using var stream = bmp.PixelBuffer.AsStream();
+                stream.Write(bytes);
+                Icon = bmp;
+            }
         }
     }
 
@@ -117,10 +118,9 @@ namespace FullScreenExperienceShell
         public string ParsingPath { get; set; } = "";
         public string Suite { get; set; } = "";
         public AppItemType Type { get; set; }
-        public int IconWidth { get; set; }
-        public int IconHeight { get; set; }
-        public byte[]? IconBytes { get; set; }
         public string IconLocation { get; set; } = "";
+        public int? IconIndex { get; set; }
+        public SafeHandle? HIcon { get; set; }
     }
 
     internal partial class AppsFolder
@@ -148,11 +148,11 @@ namespace FullScreenExperienceShell
             return null;
         }
 
-        internal static void AddApplication(ObservableCollection<AppItemViewModel> appList, AppItem item)
+        internal static void AddApplication(ObservableCollection<AppItemViewModel> appList, AppItemViewModel item)
         {
             if (string.IsNullOrEmpty(item.Suite))
             {
-                appList.Add(new AppItemViewModel(item));
+                appList.Add(item);
             }
             else
             {
@@ -167,7 +167,7 @@ namespace FullScreenExperienceShell
                     };
                     appList.Add(container);
                 }
-                container.Children.Add(new AppItemViewModel(item));
+                container.Children.Add(item);
             }
         }
         internal static void AppListFlatten(ObservableCollection<AppItemViewModel> appList)
@@ -198,16 +198,42 @@ namespace FullScreenExperienceShell
 
         internal static void AppListSort(ObservableCollection<AppItemViewModel> appList)
         {
-            foreach(var item in appList.Where(p => p.Type == AppItemType.Container))
-            {
-                AppListSort(item.Children);
-            }
-            
-            var sorted = appList.OrderBy(p => p.Name).ToList();
+            var sorted = appList.OrderBy(p => p.SortKey).ToList();
             sorted.ForEach(p =>
             {
                 appList.Remove(p);
                 appList.Insert(sorted.IndexOf(p), p);
+            });
+        }
+
+        internal static Task<(int width, int size, byte[] bytes)> GetIconBytes(SafeHandle iconHandle)
+        {
+            return Task.Run<(int, int, byte[])>(() =>
+            {
+                unsafe
+                {
+                    ICONINFO iconInfo = new();
+                    try
+                    {
+                        PInvoke.GetIconInfo(iconHandle, out iconInfo);
+
+                        BITMAP bmp;
+                        PInvoke.GetObject(iconInfo.hbmColor, Marshal.SizeOf<BITMAP>(), &bmp);
+                        int size = bmp.bmWidthBytes * bmp.bmHeight;
+                        var bytes = new byte[size];
+
+                        fixed (byte* pBitmap = bytes)
+                        {
+                            PInvoke.GetBitmapBits(iconInfo.hbmColor, size, pBitmap);
+                        }
+                        return (bmp.bmWidth, bmp.bmHeight, bytes);
+                    }
+                    finally
+                    {
+                        if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
+                        if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
+                    }
+                }
             });
         }
 
@@ -235,74 +261,24 @@ namespace FullScreenExperienceShell
                     logoPath = staticLogoPath;
                 }
                 appItem.IconLocation = logoPath;
+                appItem.IconIndex = null;
             }
             else
             {
-
-                var iconPath = string.Empty;
-                int iconIndex = 0;
                 try
                 {
-                    //Debug.WriteLine(appItem.Name);                    
                     unsafe
                     {
-                        extractIcon.GetIconLocation(0, charBuf, out iconIndex, out var flags);
-                        iconPath = new string(charBuf.SliceAtNull());
-
-                        if (string.IsNullOrEmpty(iconPath))
+                        fixed (char *pBuf = charBuf)
                         {
-                            return;
-                        }
-
-                        fixed (char* str = charBuf)
-                        {
-                            HICON largeIcon = HICON.Null;
-                            ICONINFO iconInfo = new();                            
-                            var hdc = PInvoke.CreateCompatibleDC(HDC.Null);                            
-                            try
-                            {
-                                int width = 32;
-                                int height = 32;
-                                int bytesPerLine = width * 4;
-                                int imageSizeBytes = bytesPerLine * height;
-
-                                extractIcon.Extract(new PCWSTR(str), (uint)iconIndex, &largeIcon, null, (uint)width);
-                                PInvoke.GetIconInfo(largeIcon, &iconInfo);
-
-                                BITMAPINFO bmi;
-                                bmi.bmiHeader.biSize = (uint)sizeof(BITMAPINFOHEADER);
-                                bmi.bmiHeader.biWidth = width;
-                                bmi.bmiHeader.biHeight = -height;
-                                bmi.bmiHeader.biPlanes = 1;
-                                bmi.bmiHeader.biBitCount = 32;
-                                bmi.bmiHeader.biCompression = (uint)BI_COMPRESSION.BI_RGB;
-                                var hBitmap = PInvoke.CreateDIBSection(hdc, &bmi, (uint)DIB_USAGE.DIB_RGB_COLORS, out var bits, null, 0);
-                                if (!hBitmap.IsInvalid)
-                                {
-                                    var oldObj = PInvoke.SelectObject(hdc, hBitmap);
-                                    PInvoke.DrawIconEx(hdc, 0, 0, largeIcon, width, height, 0, HBRUSH.Null, DI_FLAGS.DI_NORMAL);
-                                    PInvoke.SelectObject(hdc, oldObj);
-                                }
-
-                                var srcSpan = new Span<byte>(bits, imageSizeBytes);
-                                var bytes = new byte[imageSizeBytes];
-                                srcSpan.CopyTo(bytes);
-
-                                appItem.IconWidth = 32;
-                                appItem.IconHeight = 32;
-                                appItem.IconBytes = bytes;
-                            }
-                            finally
-                            {
-                                if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
-                                if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
-                                if (!largeIcon.IsNull) PInvoke.DestroyIcon(largeIcon);
-                                PInvoke.DeleteDC(hdc);
-                            }
+                            var str = new PWSTR(pBuf);
+                            HICON hIcon;
+                            extractIcon.GetIconLocation(0, str, (uint)charBuf.Length, out var iconIndex, out var flags);
+                            extractIcon.Extract(str, (uint)iconIndex, &hIcon, null, 32);
+                            appItem.HIcon = new DestroyIconSafeHandle((nint)hIcon.Value, true);
                         }
                     }
-
-
+                    
                 }
                 catch { }
             }
@@ -434,30 +410,26 @@ namespace FullScreenExperienceShell
             }
         }
 
-        internal static void InitApplicationList(List<AppItem> appList, ObservableCollection<AppItemViewModel> observableList)
+        internal static async Task InitApplicationList(List<AppItem> appList, ObservableCollection<AppItemViewModel> observableList)
         {
+            var lookup = observableList.ToLookup(p => p.ParsingPath);
             foreach (var item in appList)
             {
-                AppItemViewModel? app = FindApplication(observableList, item.ParsingPath);
+                AppItemViewModel? app = lookup[item.ParsingPath].FirstOrDefault();
                 if (app != null)
                 {
                     app.Name = item.Name;
                     app.Suite = item.Suite;
-                    if (!string.IsNullOrEmpty(item.IconLocation))
-                    {
-                        app.SetIcon(item.IconLocation);
-                    }
-                    else
-                    {
-                        app.SetIcon(item.IconWidth, item.IconHeight, item.IconBytes);
-                    }
+                    app.SortKey = (app.Suite ?? "") + "\\" + app.Name;
+                    await app.SetIconAsync(item.IconLocation, item.HIcon);
                 }
                 else
                 {
-                    AddApplication(observableList, item);
+                    app = new AppItemViewModel(item);
+                    observableList.Add(app);
+                    await app.SetIconAsync(item.IconLocation, item.HIcon);
                 }
             }
-            AppListFlatten(observableList);
             AppListSort(observableList);
         }
     }

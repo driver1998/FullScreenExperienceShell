@@ -99,13 +99,11 @@ namespace FullScreenExperienceShell
                 AppsFolder.GetApplications(ViewModel.AppItems);
             });
 
-            AppsFolder.InitApplicationList(ViewModel.AppItems, ViewModel.Applications);
+            await AppsFolder.InitApplicationList(ViewModel.AppItems, ViewModel.Applications);
             ViewModel.Groups = ViewModel.Applications.GroupBy(p => GetGroupKey(p.Name))
                 .Select(g => new AppItemGroup { GroupKey = g.Key, GroupItems = [.. g.ToList()] })
                 .OrderBy(g => g.GroupKey)
                 .ToList();
-
-            //ViewModel.Applications = new ObservableCollection<AppItemViewModel>(ViewModel.Applications.OrderBy(a => a.Name));
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)

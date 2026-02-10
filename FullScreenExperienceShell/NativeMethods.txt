@@ -16,6 +16,7 @@ SelectObject
 CreateDIBSection
 DrawIconEx
 DestroyIcon
+ExtractIconExW
 
 IShellFolder
 IShellItem2
