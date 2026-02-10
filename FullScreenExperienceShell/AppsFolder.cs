@@ -76,37 +76,41 @@ namespace FullScreenExperienceShell
         public partial BitmapSource? Icon { get; set; } = null;
         [ObservableProperty]
         public partial bool Expanded { get; set; } = false;
-        public string SortKey { get; set; } = "";
+
+        public string IconPath { get; set; } = "";
+
+        public string SortKey => (Suite ?? "") + "\\" + Name;
 
         [ObservableProperty]
         public partial ObservableCollection<AppItemViewModel> Children { get; set; } = [];
 
         public AppItemViewModel() { }
+
         public AppItemViewModel(AppItem item)
         {
-            Name = item.Name;
-            ParsingPath = item.ParsingPath;
-            Suite = item.Suite;
-            Type = item.Type;
-            SortKey = (Suite ?? "") + "\\" + Name;
+            this.Name = item.Name;
+            this.Suite = item.Suite;
+            this.ParsingPath = item.ParsingPath;
+            this.Type = item.Type;
+            this.IconPath = item.IconPath;
         }
-
-        public async Task SetIconAsync(string? iconPath, SafeHandle? iconHandle)
+        
+        public async Task LoadIconAsync()
         {
-            if (!string.IsNullOrEmpty(iconPath))
+            if (!string.IsNullOrEmpty(IconPath))
             {
-                Icon = new BitmapImage(new Uri(iconPath));
+                Icon = new BitmapImage(new Uri(IconPath));
             }
-            else if (iconHandle?.IsClosed == false && iconHandle?.IsInvalid == false)
+            else
             {
-                var (width, height, bytes) = await AppsFolder.GetIconBytes(iconHandle);
+                var (width, height, bytes) = await AppsFolder.GetThumbnailBytes(ParsingPath);
                 if (width == 0 || height == 0 || bytes == null)
                 {
                     return;
                 }
                 var bmp = new WriteableBitmap(width, height);
                 using var stream = bmp.PixelBuffer.AsStream();
-                stream.Write(bytes);
+                await stream.WriteAsync(bytes);
                 Icon = bmp;
             }
         }
@@ -118,127 +122,47 @@ namespace FullScreenExperienceShell
         public string ParsingPath { get; set; } = "";
         public string Suite { get; set; } = "";
         public AppItemType Type { get; set; }
-        public string IconLocation { get; set; } = "";
-        public int? IconIndex { get; set; }
-        public SafeHandle? HIcon { get; set; }
+        public string IconPath { get; set; } = "";
     }
 
     internal partial class AppsFolder
     {
-        internal static AppItemViewModel? FindApplication(ObservableCollection<AppItemViewModel> appList, string parsingPath)
-        {
-            foreach (var item in appList)
-            {
-                if (item.Type == AppItemType.Container)
-                {
-                    var child = FindApplication(item.Children, parsingPath);
-                    if (child != null)
-                    {
-                        return child;
-                    }
-                }
-                else
-                {
-                    if (item.ParsingPath.Equals(parsingPath, StringComparison.OrdinalIgnoreCase))
-                    {
-                        return item;
-                    }
-                }
-            }
-            return null;
-        }
-
-        internal static void AddApplication(ObservableCollection<AppItemViewModel> appList, AppItemViewModel item)
-        {
-            if (string.IsNullOrEmpty(item.Suite))
-            {
-                appList.Add(item);
-            }
-            else
-            {
-                var container = appList.Where(p => p.Type == AppItemType.Container && p.Name == item.Suite).FirstOrDefault();
-                if (container == null)
-                {
-                    container = new AppItemViewModel
-                    {
-                        Name = item.Suite,
-                        Suite = "Container",
-                        Type = AppItemType.Container
-                    };
-                    appList.Add(container);
-                }
-                container.Children.Add(item);
-            }
-        }
-        internal static void AppListFlatten(ObservableCollection<AppItemViewModel> appList)
-        {
-            List<(int, AppItemViewModel)> itemToRemove = [];
-
-            foreach (var (i, item) in appList.Index())
-            {
-                if (item.Type == AppItemType.Container)
-                {
-                    if (item.Children.Count <= 1)
-                    {
-                        itemToRemove.Add((i, item));
-                    }
-                }
-            }
-            foreach (var (i, item) in itemToRemove)
-            {
-                appList.Remove(item);
-                if (item.Children.Count > 0)
-                {
-                    var onlyChild = item.Children.First();
-                    onlyChild.Suite = "";
-                    appList.Insert(i, onlyChild);
-                }
-            }
-        }
-
-        internal static void AppListSort(ObservableCollection<AppItemViewModel> appList)
-        {
-            var sorted = appList.OrderBy(p => p.SortKey).ToList();
-            sorted.ForEach(p =>
-            {
-                appList.Remove(p);
-                appList.Insert(sorted.IndexOf(p), p);
-            });
-        }
-
-        internal static Task<(int width, int size, byte[] bytes)> GetIconBytes(SafeHandle iconHandle)
+        internal static Task<(int width, int size, byte[] bytes)> GetThumbnailBytes(string parsingPath)
         {
             return Task.Run<(int, int, byte[])>(() =>
             {
-                unsafe
+                IShellItemImageFactory? imageFactory = null;
+                try
                 {
-                    ICONINFO iconInfo = new();
-                    try
+                    var path = $@"shell:appsfolder\{parsingPath}";
+                    PInvoke.SHCreateItemFromParsingName(path, null, typeof(IShellItemImageFactory).GUID, out var ppv);
+                    imageFactory = (IShellItemImageFactory)ppv;
+                    imageFactory.GetImage(new SIZE(32, 32), SIIGBF.SIIGBF_ICONONLY | SIIGBF.SIIGBF_SCALEUP, out var bitmap);
+
+                    using (bitmap)
                     {
-                        PInvoke.GetIconInfo(iconHandle, out iconInfo);
-
-                        BITMAP bmp;
-                        PInvoke.GetObject(iconInfo.hbmColor, Marshal.SizeOf<BITMAP>(), &bmp);
-                        int size = bmp.bmWidthBytes * bmp.bmHeight;
-                        var bytes = new byte[size];
-
-                        fixed (byte* pBitmap = bytes)
+                        unsafe
                         {
-                            PInvoke.GetBitmapBits(iconInfo.hbmColor, size, pBitmap);
+                            BITMAP bmp;
+                            Span<byte> span = new Span<byte>(&bmp, Marshal.SizeOf<BITMAP>());
+                            PInvoke.GetObject(bitmap, span);
+
+                            int size = bmp.bmWidthBytes * bmp.bmHeight;
+                            var bytes = new byte[size];
+                            PInvoke.GetBitmapBits(bitmap, bytes);
+                            return (bmp.bmWidth, bmp.bmHeight, bytes);
                         }
-                        return (bmp.bmWidth, bmp.bmHeight, bytes);
-                    }
-                    finally
-                    {
-                        if (!iconInfo.hbmColor.IsNull) PInvoke.DeleteObject(iconInfo.hbmColor);
-                        if (!iconInfo.hbmMask.IsNull) PInvoke.DeleteObject(iconInfo.hbmMask);
                     }
                 }
+                finally
+                {
+                    if (imageFactory != null) Marshal.ReleaseComObject(imageFactory);
+                }
             });
+
         }
 
-
-        internal static void GetImage(AppItem appItem, IShellItem2 shellItem2, IExtractIconW extractIcon)
+        internal static void GetPackagedAppIcon(AppItem appItem, IShellItem2 shellItem2)
         {
             var packageFamilyName = ShellItemGetStringProperty(shellItem2, PInvoke.PKEY_AppUserModel_PackageFamilyName);
             var packaged = !string.IsNullOrEmpty(packageFamilyName);
@@ -252,7 +176,7 @@ namespace FullScreenExperienceShell
 
                 var staticLogoPath = Path.Combine(packageInstallPath, smallLogoPath);
 
-                var indirectString = $"@{{{packageFullName}?ms-resource:///Files/{smallLogoPath}}}";
+                var indirectString = $"@{{{packageFullName}?ms-resource:///Files/{smallLogoPath}}}?theme=light";
                 PInvoke.SHLoadIndirectString(indirectString, charBuf);
                 var logoPath = new string(charBuf.SliceAtNull());
 
@@ -260,27 +184,7 @@ namespace FullScreenExperienceShell
                 {
                     logoPath = staticLogoPath;
                 }
-                appItem.IconLocation = logoPath;
-                appItem.IconIndex = null;
-            }
-            else
-            {
-                try
-                {
-                    unsafe
-                    {
-                        fixed (char *pBuf = charBuf)
-                        {
-                            var str = new PWSTR(pBuf);
-                            HICON hIcon;
-                            extractIcon.GetIconLocation(0, str, (uint)charBuf.Length, out var iconIndex, out var flags);
-                            extractIcon.Extract(str, (uint)iconIndex, &hIcon, null, 32);
-                            appItem.HIcon = new DestroyIconSafeHandle((nint)hIcon.Value, true);
-                        }
-                    }
-                    
-                }
-                catch { }
+                appItem.IconPath = logoPath;
             }
         }
 
@@ -362,8 +266,9 @@ namespace FullScreenExperienceShell
             }
         }
 
-        internal static void GetApplications(List<AppItem> appList)
+        internal static List<AppItem> GetApplications()
         {
+            var appList = new List<AppItem>();
             IShellFolder? appsFolder = null;
             try
             {
@@ -376,25 +281,15 @@ namespace FullScreenExperienceShell
                         var name = ShellItemGetStringProperty(appShellItem, PInvoke.PKEY_ItemNameDisplay);
                         var suite = ShellItemGetStringProperty(appShellItem, PInvoke.PKEY_Tile_SuiteDisplayName);
 
-                        var item = appList.Where(p => p.ParsingPath.Equals(parsingPath, StringComparison.InvariantCultureIgnoreCase)).FirstOrDefault();
-                        if (item != null)
+                        var item = new AppItem
                         {
-                            item.Name = name ?? parsingPath;
-                            item.Suite = suite ?? "";
-                            GetImage(item, appShellItem, extractIcon);
-                        }
-                        else
-                        {
-                            item = new AppItem
-                            {
-                                Name = name ?? parsingPath,
-                                Suite = suite ?? "",
-                                ParsingPath = parsingPath,
-                                Type = AppItemType.Application,
-                            };
-                            GetImage(item, appShellItem, extractIcon);
-                            appList.Add(item);
-                        }
+                            Name = name ?? parsingPath,
+                            Suite = suite ?? "",
+                            ParsingPath = parsingPath,
+                            Type = AppItemType.Application,
+                        };
+                        GetPackagedAppIcon(item, appShellItem);
+                        appList.Add(item);
                     }
                     finally
                     {
@@ -408,9 +303,20 @@ namespace FullScreenExperienceShell
             {
                 if (appsFolder != null) Marshal.ReleaseComObject(appsFolder);
             }
+            return appList;
         }
 
-        internal static async Task InitApplicationList(List<AppItem> appList, ObservableCollection<AppItemViewModel> observableList)
+        internal static void AppListSort(ObservableCollection<AppItemViewModel> appList)
+        {
+            var sorted = appList.OrderBy(p => p.SortKey).ToList();
+            sorted.ForEach(p =>
+            {
+                appList.Remove(p);
+                appList.Insert(sorted.IndexOf(p), p);
+            });
+        }
+
+        internal static void InitApplicationList(List<AppItem> appList, ObservableCollection<AppItemViewModel> observableList)
         {
             var lookup = observableList.ToLookup(p => p.ParsingPath);
             foreach (var item in appList)
@@ -420,17 +326,48 @@ namespace FullScreenExperienceShell
                 {
                     app.Name = item.Name;
                     app.Suite = item.Suite;
-                    app.SortKey = (app.Suite ?? "") + "\\" + app.Name;
-                    await app.SetIconAsync(item.IconLocation, item.HIcon);
+                    app.IconPath = item.IconPath;
                 }
                 else
                 {
                     app = new AppItemViewModel(item);
                     observableList.Add(app);
-                    await app.SetIconAsync(item.IconLocation, item.HIcon);
                 }
             }
             AppListSort(observableList);
         }
+
+        internal static ObservableCollection<AppItemViewModel> InitSuiteView(ObservableCollection<AppItemViewModel> appList)
+        {
+            var list = new ObservableCollection<AppItemViewModel>(appList);
+            var suiteLookup = list.Where(p => !string.IsNullOrEmpty(p.Suite)).GroupBy(p => p.Suite);
+
+            foreach (var group in suiteLookup)
+            {
+
+                if (group.Count() == 1)
+                {
+                    group.First().Suite = "";
+                }
+                else
+                {
+                    foreach (var item in group)
+                    {
+                        list.Remove(item);
+                    }
+                    list.Add(new AppItemViewModel
+                    {
+                        Type = AppItemType.Container,
+                        Name = group.Key,
+                        Children = [.. group]
+                    });
+                }
+                
+            }
+            return list;
+        }
+
+        internal static Task LoadAllIconsAsync(ObservableCollection<AppItemViewModel> appList) =>
+            Task.WhenAll(appList.Select(p => p.LoadIconAsync()));
     }
 }

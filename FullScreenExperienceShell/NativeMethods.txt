@@ -17,6 +17,7 @@ CreateDIBSection
 DrawIconEx
 DestroyIcon
 ExtractIconExW
+SHCreateItemFromParsingName
 
 IShellFolder
 IShellItem2

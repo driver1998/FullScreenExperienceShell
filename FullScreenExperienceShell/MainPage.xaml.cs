@@ -24,9 +24,10 @@ namespace FullScreenExperienceShell
         public partial ObservableCollection<AppItemViewModel> Applications { get; set; } = [];
 
         [ObservableProperty]
-        public partial List<AppItemGroup> Groups { get; set; } = [];
+        public partial ObservableCollection<AppItemViewModel> AppList { get; set; } = [];
 
-        public List<AppItem> AppItems = [];
+        [ObservableProperty]
+        public partial List<AppItemGroup> Groups { get; set; } = [];
     }
 
     public partial class AppItemGroup
@@ -94,16 +95,19 @@ namespace FullScreenExperienceShell
         [RelayCommand]
         public async Task RefreshAppList()
         {
+            List<AppItem> appList = [];
             await Task.Run(() =>
             {
-                AppsFolder.GetApplications(ViewModel.AppItems);
+                appList = AppsFolder.GetApplications();
             });
 
-            await AppsFolder.InitApplicationList(ViewModel.AppItems, ViewModel.Applications);
-            ViewModel.Groups = ViewModel.Applications.GroupBy(p => GetGroupKey(p.Name))
+            AppsFolder.InitApplicationList(appList, ViewModel.Applications);
+            ViewModel.AppList = AppsFolder.InitSuiteView(ViewModel.Applications);
+            ViewModel.Groups = ViewModel.AppList.GroupBy(p => GetGroupKey(p.Name))
                 .Select(g => new AppItemGroup { GroupKey = g.Key, GroupItems = [.. g.ToList()] })
                 .OrderBy(g => g.GroupKey)
                 .ToList();
+            await AppsFolder.LoadAllIconsAsync(ViewModel.Applications);
         }
 
         private async void Page_Loaded(object sender, RoutedEventArgs e)

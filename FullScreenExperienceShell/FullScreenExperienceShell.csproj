@@ -13,7 +13,7 @@
     <WinUISDKReferences>false</WinUISDKReferences>
     <EnableMsixTooling>true</EnableMsixTooling>
     <Nullable>enable</Nullable>
-	<LangVersion>preview</LangVersion>
+  	<LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
