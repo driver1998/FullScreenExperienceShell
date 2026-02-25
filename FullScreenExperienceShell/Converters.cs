@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.UI.Xaml.Data;
+using Windows.UI.Xaml.Data;
 
 namespace FullScreenExperienceShell
 {
@@ -27,11 +27,11 @@ namespace FullScreenExperienceShell
             bool isSuiteItem = !string.IsNullOrEmpty(value as string);
             if (isSuiteItem)
             {
-                return new Microsoft.UI.Xaml.Thickness(36, 0, 0, 0);
+                return new Windows.UI.Xaml.Thickness(36, 0, 0, 0);
             }
             else
             {
-                return new Microsoft.UI.Xaml.Thickness(0);
+                return new Windows.UI.Xaml.Thickness(0);
             }
         }
         public object ConvertBack(object value, Type targetType, object parameter, string language)

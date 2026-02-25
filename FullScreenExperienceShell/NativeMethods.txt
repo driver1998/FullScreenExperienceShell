@@ -20,7 +20,7 @@ ExtractIconExW
 SHCreateItemFromParsingName
 
 IShellFolder
-IShellItem2
+IShellItem
 IShellItemImageFactory
 IExtractIconW
 
@@ -33,3 +33,4 @@ BITMAP
 BITMAPINFO
 KNOWN_FOLDER_FLAG
 BI_COMPRESSION
+PROPVARIANT

@@ -7,12 +7,13 @@
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
   xmlns:uap4="http://schemas.microsoft.com/appx/manifest/uap/windows10/4"
-  IgnorableNamespaces="uap rescap uap3 uap4">
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  IgnorableNamespaces="uap rescap uap3 uap4 uap10">
 
 	<Identity
 	  Name="ee88c8f7-d547-414d-b6ec-029a80656542"
-	  Publisher="CN=driver1998"
-	  Version="1.0.0.0" />
+	  Publisher="CN=WinUITest"
+	  Version="1.0.1.0" />
 
 	<mp:PhoneIdentity PhoneProductId="ee88c8f7-d547-414d-b6ec-029a80656542" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -34,7 +35,9 @@
 	<Applications>
 		<Application Id="App"
 		  Executable="$targetnametoken$.exe"
-		  EntryPoint="$targetentrypoint$">
+		  EntryPoint="FullScreenExperienceShell.App"
+		  uap10:RuntimeBehavior="windowsApp"
+		  uap10:TrustLevel="mediumIL">
 			<uap:VisualElements
 			  DisplayName="FullScreenExperienceShell"
 			  Description="FullScreenExperienceShell"
@@ -54,8 +57,8 @@
 
 	<Capabilities>
 		<rescap:Capability Name="runFullTrust" />
-		<rescap:Capability Name="packageManagement" />
-		<rescap:Capability Name="packageQuery" />
+		<rescap:Capability Name="broadFileSystemAccess"/>
+		<uap4:CustomCapability Name="Microsoft.coreAppActivation_8wekyb3d8bbwe"/>
 		<uap4:CustomCapability Name="Microsoft.appCategory.gamingHome_8wekyb3d8bbwe" />
 	</Capabilities>
 </Package>
