@@ -12,7 +12,7 @@
 
 	<Identity
 	  Name="ee88c8f7-d547-414d-b6ec-029a80656542"
-	  Publisher="CN=WinUITest"
+	  Publisher="CN=driver1998"
 	  Version="1.0.1.0" />
 
 	<mp:PhoneIdentity PhoneProductId="ee88c8f7-d547-414d-b6ec-029a80656542" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>

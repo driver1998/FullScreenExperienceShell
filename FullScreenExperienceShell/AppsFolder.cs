@@ -235,14 +235,13 @@ namespace FullScreenExperienceShell
             return new string(variant.Anonymous.Anonymous.Anonymous.pwszVal.AsSpan().SliceAtNull());
         }
 
-        internal static unsafe void ShellFolderEnumItems(IShellFolder shellFolder, Action<IShellItem2, IExtractIconW> action)
+        internal static unsafe void ShellFolderEnumItems(IShellFolder shellFolder, Action<IShellItem2> action)
         {
             IEnumIDList? enumIDList = null;
             Span<nint> itemIDPtrList = stackalloc nint[256];
             Span<char> iconPath = stackalloc char[65535];
             uint cnt = (uint)itemIDPtrList.Length;
 
-            var IID_IExtractIconW = typeof(IExtractIconW).GUID;
             fixed (nint* itemIDList = itemIDPtrList)
             {
                 shellFolder.EnumObjects(HWND.Null, 0, out enumIDList);
@@ -258,8 +257,7 @@ namespace FullScreenExperienceShell
                         {
 
                             itemArray.GetItemAt(i, out IShellItem ppsi);
-                            shellFolder.GetUIObjectOf(HWND.Null, 1, (ITEMIDLIST**)&itemIDList[i], &IID_IExtractIconW, null, out var ppv);
-                            action?.Invoke((IShellItem2)ppsi, (IExtractIconW)ppv);
+                            action?.Invoke((IShellItem2)ppsi);
                         }
 
                     }
@@ -282,7 +280,7 @@ namespace FullScreenExperienceShell
             var appList = new List<AppItem>();
             IShellFolder? appsFolder = null;            
             appsFolder = GetAppsFolder();
-            ShellFolderEnumItems(appsFolder, async (appShellItem, extractIcon) =>
+            ShellFolderEnumItems(appsFolder, async (appShellItem) =>
             {
                 var parsingPath = ShellItemGetStringProperty(appShellItem, PInvoke.PKEY_ParsingName);
                 var name = ShellItemGetStringProperty(appShellItem, PInvoke.PKEY_ItemNameDisplay);

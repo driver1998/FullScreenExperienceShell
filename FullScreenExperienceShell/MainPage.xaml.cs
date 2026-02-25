@@ -122,17 +122,5 @@ namespace FullScreenExperienceShell
                 }
             }
         }
-
-        private void SemanticZoom_ViewChangeStarted(object sender, SemanticZoomViewChangedEventArgs e)
-        {
-            if (e.IsSourceZoomedInView == false)
-            {
-                e.DestinationItem.Item = e.SourceItem.Item;
-            }
-            else
-            {
-                ViewModel.CurrentGroup = e.SourceItem.Item as AppItemGroup;
-            }
-        }
     }
 }
