@@ -5,7 +5,6 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:muxdata="using:Microsoft.UI.Xaml.Data"
     xmlns:local="using:FullScreenExperienceShell"
-    xmlns:dashboard="using:DevHome.Dashboard.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
@@ -91,9 +90,7 @@
                     ItemTemplateSelector="{StaticResource AppItemTemplateSelector}" ItemInvoked="TreeView_ItemInvoked"/>-->
             </SemanticZoom.ZoomedInView>
         </SemanticZoom>
-        
-        <ProgressRing Grid.Row="1" Visibility="{x:Bind RefreshAppListCommand.IsRunning, Mode=OneWay}" Width="48" Height="48"></ProgressRing>
 
-        <dashboard:DashboardView Grid.Column="1" Grid.Row="0" Grid.RowSpan="2"></dashboard:DashboardView>
+        <ProgressRing Grid.Row="1" Visibility="{x:Bind RefreshAppListCommand.IsRunning, Mode=OneWay}" Width="48" Height="48"></ProgressRing>
     </Grid>
 </Page>
